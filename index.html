@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>David's Private Diary Entries</title>
+    <script src="main.js" defer></script>
+    <link rel="stylesheet" href="styles.css"></link>
+</head>
+<body>
+    <div class="password-popup" id="pass-popup">
+        <div class="password-dialogue">
+            <h2>please enter password</h2>
+            <input title="password" id="pass">
+            <button title="submit" type="button" onclick="load(document.getElementById('pass').value.trim());" id="enter-button">Enter</button>
+        </div>
+    </div>
+    <div id="entries"></div>
+</body>
+</html>
