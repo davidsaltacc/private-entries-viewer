@@ -39,7 +39,7 @@ function createEntry(content, date) {
     contentP.className = "content";
 
     dateP.innerHTML = date;
-    contentP.innerHTML = content;
+    contentP.innerHTML = content.replaceAll("\n", "<br>");
 
     div.appendChild(dateP);
     div.appendChild(contentP);
