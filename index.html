@@ -3,11 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>David's Private Diary Entries</title>
+    <title>David's Private Diary Entries - Editor</title>
     <script src="main.js" defer></script>
     <link rel="stylesheet" href="styles.css"></link>
 </head>
 <body>
+    <div class="loader-container hidden" id="loader">
+        <div class="loader"></div>
+    </div>
     <div class="password-popup" id="pass-popup">
         <div class="password-dialogue">
             <h2>please enter password</h2>
@@ -17,6 +20,12 @@
     </div>
     <div class="header">
         <h2>Diary Entries</h2>
+        <button type="button" title="Add Entry" class="add-entry-button" onclick="showEditing();" id="new-entry-button">Add New</button>
+    </div>
+    <div class="entry" id="editing-entry" style="display: none;">
+        <p class="date" id="editing-date">Now</p>
+        <textarea title="Content" id="editing-content" oninput="this.style.height = '1px'; this.style.height = `${this.scrollHeight}px`" rows="1"></textarea>
+        <button title="Save" type="button" id="editing-save-button" onclick="saveEntry();">Save</button>
     </div>
     <div id="entries"></div>
 </body>
