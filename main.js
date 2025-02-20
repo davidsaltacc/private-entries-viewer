@@ -53,7 +53,9 @@ async function load(password) {
 
     try {
 
-        data = await (await fetch("https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin")).text();
+        data = await (await fetch("https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin", {
+            cache: "no-store"
+        })).text();
         data = JSON.parse(await decrypt(password, data));
         
         data.forEach(entry => createEntry(entry.content, new Date(entry.date).toLocaleString("en-US", {
