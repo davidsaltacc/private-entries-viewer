@@ -57,6 +57,7 @@ async function load(password) {
         data = JSON.parse(await decrypt(password, data));
         
         data.forEach(entry => createEntry(entry.content, new Date(entry.date).toLocaleString("en-US", {
+            timeZone: "Europe/Berlin", // i live in the gmt+1 timezone
             year: "numeric",
             month: "long",
             day: "numeric",
