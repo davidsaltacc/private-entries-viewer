@@ -25,7 +25,7 @@
     <div class="entry" id="editing-entry" style="display: none;">
         <p class="date" id="editing-date">Now</p>
         <textarea title="Content" id="editing-content" oninput="this.style.height = '1px'; this.style.height = `${this.scrollHeight}px`" rows="1"></textarea>
-        <button title="Save" type="button" id="editing-save-button" onclick="saveEntry();">Save</button>
+        <button title="Save" type="button" id="editing-save-button" class="editing-save-button" onclick="saveEntry();">Save</button>
     </div>
     <div id="entries"></div>
 </body>

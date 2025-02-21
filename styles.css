@@ -100,7 +100,7 @@ body {
     width: 150px;
 }
 
-#editing-content {
+textarea {
     box-sizing: border-box;
     resize: none;
     width: 100%;
@@ -113,7 +113,7 @@ body {
     margin-bottom: 40px
 }
 
-#editing-save-button {
+.editing-save-button {
     float: right;
     width: 100px;
     margin-top: -30px;

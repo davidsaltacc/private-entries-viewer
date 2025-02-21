@@ -44,6 +44,10 @@ function createEntryInUI(content, date, id, prepend) {
         removeEntry(id, div);
     };
 
+    editSpan.onclick = () => {
+        startEditEntry(id, div);
+    };
+
 } 
 
 var entries = null;
@@ -102,6 +106,59 @@ async function removeEntry(id, uiElement) {
         uiElement.remove();
     }
     hideLoader();
+}
+
+// idkWhatToPutHere_012330121c363c5f7690a1b99e4b8543658f31d96fe7a4d7a
+
+async function startEditEntry(id, uiElement) {
+
+    var textArea = document.createElement("textarea");
+    textArea.oninput = () => {
+        textArea.style.height = "1px";
+        textArea.style.height = `${textArea.scrollHeight}px`;
+    };
+    textArea.title = "Content";
+    textArea.value = entries.filter(x => x.id == id)[0].content;
+    textArea.rows = textArea.value.split("\n").length + 1;
+
+    uiElement.getElementsByClassName("content")[0].remove();
+
+    uiElement.appendChild(textArea);
+
+    var saveButton = document.createElement("button");
+    saveButton.innerHTML = saveButton.title = "Save";
+    saveButton.className = "editing-save-button";
+
+    saveButton.onclick = async () => {
+
+        showLoader();
+
+        entries.filter(x => x.id == id)[0].content = textArea.value;
+
+        await fetch("/upload", { 
+            headers: { 
+                "key": key,
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            }, 
+            body: JSON.stringify(entries), 
+            method: "post" 
+        });
+
+        var contentP = document.createElement("p");
+        contentP.className = "content";
+        contentP.innerHTML = textArea.value.replaceAll("\n", "<br>");
+
+        uiElement.appendChild(contentP);
+        saveButton.remove();
+        textArea.remove();
+
+        hideLoader();
+
+    };
+
+    uiElement.appendChild(saveButton);
+
 }
 
 async function decrypt(key, encrypted) { 
