@@ -135,27 +135,17 @@ async function decrypt(key, encrypted) {
 
 async function load(password) {
 
-    var data;
     var button = document.getElementById("enter-button");
 
     showLoader();
 
     try {
 
-        if (EDITOR) {
-            data = await (await fetch("/data", { 
-                headers: { 
-                    "key": password 
-                },
-                cache: "no-store" 
-            })).text();
-            data = JSON.parse(data);
-        } else {
-            data = await (await fetch("https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin", {
-                cache: "no-store"
-            })).text();
-            data = JSON.parse(await decrypt(password, data));
-        }
+        var data = await (await fetch(EDITOR ? "/data" : "https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin", {
+            cache: "no-store" 
+        })).text();
+
+        data = JSON.parse(await decrypt(password, data));
         
         data.forEach(entry => createEntryInUI(entry.content, new Date(entry.date).toLocaleString("en-US", {
             timeZone: "Europe/Berlin",
