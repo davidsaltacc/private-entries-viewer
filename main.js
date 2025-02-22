@@ -2,7 +2,7 @@
 const EDITOR = window.location.port == 31457; 
 
 if (!EDITOR) {
-    document.getElementById("new-entry-button").style.display = "none";
+    document.getElementById("options").style.display = "none";
 }
 
 function hideLoader() {
