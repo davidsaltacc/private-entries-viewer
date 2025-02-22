@@ -1,5 +1,5 @@
 
-const EDITOR = window.location.port == 31457;
+const EDITOR = window.location.port == 31457; 
 
 if (!EDITOR) {
     document.getElementById("new-entry-button").style.display = "none";
@@ -108,8 +108,6 @@ async function removeEntry(id, uiElement) {
     hideLoader();
 }
 
-// idkWhatToPutHere_012330121c363c5f7690a1b99e4b8543658f31d96fe7a4d7a
-
 async function startEditEntry(id, uiElement) {
 
     var textArea = document.createElement("textarea");
@@ -198,7 +196,7 @@ async function load(password) {
 
     try {
 
-        var data = await (await fetch(EDITOR ? "/data" : "https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin", {
+        var data = await (await fetch(EDITOR ? "/data" : "https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin", { 
             cache: "no-store" 
         })).text();
 
@@ -231,17 +229,42 @@ async function load(password) {
     }
 
     document.getElementById("pass-popup").style.display = "none";
+    document.getElementById("options").style.display = "block";
     hideLoader();
 
 }
 
 function showEditing() {
-    document.getElementById("editing-entry").style.display = "block";
+    document.getElementById("editing-entry").classList.toggle("hidden");
     newEntryDate = new Date(Date.now());
 }
 
 function saveEntry() {
     uploadNewEntry(document.getElementById("editing-content").value, newEntryDate);
     document.getElementById("editing-content").value = "";
-    document.getElementById("editing-entry").style.display = "none";
+    document.getElementById("editing-entry").classList.add("hidden");
+}
+
+function showPasswordChangeDialogue() {
+    document.getElementById("change-pass-dialogue").classList.toggle("hidden");
+}
+
+async function changePassword(oldPass, newPass) {
+    showLoader();
+    if ((await fetch("/change_password", { 
+        headers: { 
+            "old_pass": oldPass,
+            "new_pass": newPass
+        },
+        method: "post"
+    })).status == 200) {
+        document.getElementById("change-pass-dialogue").classList.remove("hidden");;
+        key = newPass;
+    } else {
+        document.getElementById("change-pass-confirm").innerHTML = "[failed...]";
+        setTimeout(() => {
+            document.getElementById("change-pass-confirm").innerHTML = "Change";
+        }, 1000);
+    }
+    hideLoader();
 }
