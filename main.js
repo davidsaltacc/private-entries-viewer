@@ -229,7 +229,9 @@ async function load(password) {
     }
 
     document.getElementById("pass-popup").style.display = "none";
-    document.getElementById("options").style.display = "block";
+    if (EDITOR) {
+        document.getElementById("options").style.display = "block";
+    }
     hideLoader();
 
 }
