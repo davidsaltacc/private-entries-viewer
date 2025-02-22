@@ -14,14 +14,14 @@
     <div class="password-popup">
         <div class="password-dialogue" id="pass-popup">
             <h2>Please Enter Password</h2>
-            <input title="password" id="pass">
+            <input title="password" id="pass" type="password">
             <button title="submit" type="button" onclick="load(document.getElementById('pass').value.trim());" id="enter-button">Enter</button>
         </div>
         <div class="password-dialogue change-pass-dialogue hidden" id="change-pass-dialogue">
             <h3>Old password</h3>
-            <input title="old password" id="old-pass">
+            <input title="old password" id="old-pass" type="password">
             <h3>New password</h3>
-            <input title="new password" id="new-pass">
+            <input title="new password" id="new-pass" type="password">
             <button title="submit" type="button" onclick="changePassword(document.getElementById('old-pass').value.trim(), document.getElementById('new-pass').value.trim());" id="change-pass-confirm">Change</button>
         </div>
     </div>
