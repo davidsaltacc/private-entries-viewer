@@ -196,7 +196,7 @@ async function load(password) {
 
     try {
 
-        var data = await (await fetch(EDITOR ? "/data" : "https://raw.githubusercontent.com/davidsaltacc/private-entries/main/data.bin", { 
+        var data = await (await fetch(EDITOR ? "/data" : "https://gist.githubusercontent.com/davidsaltacc/819dd14b5ce6510b950b0ff7fbfa2119/raw/e6c65c2f830c574b9557e8eecb876d816fef0076/private-entries.bin", { 
             cache: "no-store" 
         })).text();
 
