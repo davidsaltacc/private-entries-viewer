@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>David's Private Diary Entries - Editor</title>
+    <title>David's Private Diary Entries</title>
     <script src="main.js" defer></script>
     <link rel="stylesheet" href="styles.css"></link>
 </head>
@@ -14,8 +14,11 @@
     <div class="password-popup">
         <div class="password-dialogue" id="pass-popup">
             <h2>Please Enter Password</h2>
-            <input title="password" id="pass" type="password">
-            <button title="submit" type="button" onclick="load(document.getElementById('pass').value.trim());" id="enter-button">Enter</button>
+            <input title="password" id="pass" type="password" name="password">
+            <p id="iseditor-boxandlabel"><input type="checkbox" title="are you an editor?" id="is-editor"> I am an editor</p>
+            <h2 class="editor-pass" style="display: none;">Editor's Password</h2>
+            <input title="password" class="editor-pass" id="editor-pass" type="password" style="display: none;" name="password2">
+            <button title="submit" type="button" onclick="load(document.getElementById('pass').value.trim(), document.getElementById('is-editor').checked, document.getElementById('editor-pass').value.trim());" id="enter-button">Enter</button>
         </div>
         <div class="password-dialogue change-pass-dialogue hidden" id="change-pass-dialogue">
             <h3>Old password</h3>

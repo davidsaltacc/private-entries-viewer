@@ -55,7 +55,7 @@ body {
     height: 250px;
 }
 
-.password-dialogue input, button {
+.password-dialogue input:not([type="checkbox"]), button {
     appearance: none;
     outline: none;
     border: none;
@@ -68,12 +68,12 @@ body {
     cursor: pointer;
 }
 
-.password-dialogue input {
+.password-dialogue input:not([type="checkbox"]) {
     padding-left: 8px;
     padding-right: 8px;
 }
 
-.password-dialogue input:focus {
+.password-dialogue input:not([type="checkbox"]):focus {
     border: 1px solid #ffffff;
 }
 
@@ -154,4 +154,35 @@ textarea {
 
 .hidden {
     display: none;
+}
+
+body:has(input#is-editor[type="checkbox"]:checked) .editor-pass {
+    display: block !important;
+}
+
+body:has(input#is-editor[type="checkbox"]:checked) .password-dialogue {
+    height: 280px;
+}
+
+#iseditor-boxandlabel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#is-editor {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 10px;
+    width: 18px;
+    height: 18px;
+    color: #333333;
+    cursor: pointer;
+    background-color: #3b3b3b;
+    border-radius: 5px;
+    border: 1px solid #4e4e4e;
+}
+
+#is-editor:checked {
+    background-color: #9b9b9b;
 }

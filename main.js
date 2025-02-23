@@ -1,9 +1,7 @@
 
-const EDITOR = window.location.port == 31457; 
+var EDITOR = false; 
 
-if (!EDITOR) {
-    document.getElementById("options").style.display = "none";
-}
+const encrypted_write_key = "Û\u009e\u0088o\u00815%\u0006)A\u0018òÏ§Ô·áHè\u0089¡x0e\u000e\u009b\u001fGñ´jø\u0019Þ4CHD1ÅÆ»û&hÖ¯:I¦?JEê¦b";
 
 function hideLoader() {
     document.getElementById("loader").classList.add("hidden");
@@ -11,6 +9,84 @@ function hideLoader() {
 
 function showLoader() {
     document.getElementById("loader").classList.remove("hidden");
+}
+
+async function encrypt(key, input) {
+    
+    const keyData = new TextEncoder().encode(key);
+    const keyHash = await crypto.subtle.digest("SHA-256", keyData);
+
+    const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        keyHash,
+        { name: "AES-CTR" },
+        false,
+        [ "encrypt" ]
+    );
+
+    const iv = crypto.getRandomValues(new Uint8Array(16));
+
+    const data = new TextEncoder().encode(input);
+
+    const ciphertext = await crypto.subtle.encrypt(
+        {
+            name: "AES-CTR",
+            counter: iv,
+            length: 128
+        },
+        cryptoKey,
+        data
+    );
+
+    const result = new Uint8Array(iv.length + ciphertext.byteLength);
+    result.set(iv, 0);
+    result.set(new Uint8Array(ciphertext), iv.length);
+
+    return String.fromCharCode(...new Uint8Array(result.buffer));
+
+}
+
+async function decrypt(key, encrypted) {
+
+    const encryptedData = new ArrayBuffer(encrypted.length);
+    const view = new Uint8Array(encryptedData);
+    for (let i = 0; i < encrypted.length; i++) {
+        view[i] = encrypted.charCodeAt(i);
+    }
+
+    const iv = new Uint8Array(encryptedData, 0, 16);
+    const ciphertext = new Uint8Array(encryptedData, 16);
+
+    const keyData = new TextEncoder().encode(key);
+    const keyHash = await crypto.subtle.digest("SHA-256", keyData);
+
+    const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        keyHash,
+        { name: "AES-CTR" },
+        false,
+        [ "decrypt" ]
+    );
+
+    const decrypted = await crypto.subtle.decrypt(
+        {
+            name: "AES-CTR",
+            counter: iv,
+            length: 128
+        },
+        cryptoKey,
+        ciphertext
+    );
+
+    return new TextDecoder().decode(decrypted);
+
+}
+
+async function verifyEditor(pass) {
+    return (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", {
+        method: "GET",
+        headers: { Authorization: `token ${await decrypt(pass, encrypted_write_key)}`, accept: "application/vnd.github+json" }
+    })).status == 200;
 }
 
 function createEntryInUI(content, date, id, prepend) {
@@ -52,8 +128,17 @@ function createEntryInUI(content, date, id, prepend) {
 
 var entries = null;
 var key = null;
+var editorKey = null;
 
 var newEntryDate = null;
+
+async function uploadData(data) {
+    return (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", {
+        method: "PATCH",
+        headers: { Authorization: `token ${await decrypt(editorKey, encrypted_write_key)}`, accept: "application/vnd.github+json" },
+        body: JSON.stringify({ files: { "private-entries.bin": { content: await encrypt(key, data) } } })
+    })).status;
+}
 
 async function uploadNewEntry(content, date) {
     showLoader();
@@ -68,15 +153,7 @@ async function uploadNewEntry(content, date) {
         content: content,
         id: id
     });
-    await fetch("/upload", { 
-        headers: { 
-            "key": key,
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        }, 
-        body: JSON.stringify(entries), 
-        method: "post" 
-    });
+    uploadData(JSON.stringify(entries));
     createEntryInUI(content, date.toLocaleString("en-US", {
         timeZone: "Europe/Berlin",
         year: "numeric",
@@ -93,15 +170,7 @@ async function uploadNewEntry(content, date) {
 async function removeEntry(id, uiElement) {
     showLoader();
     entries.splice(entries.indexOf(entries.filter(x => x.id == id)[0]), 1);
-    await fetch("/upload", { 
-        headers: { 
-            "key": key,
-            "Accept": "application/json",
-            "Content-Type": "application/json"
-        }, 
-        body: JSON.stringify(entries), 
-        method: "post" 
-    });
+    uploadData(JSON.stringify(entries));
     if (uiElement) {
         uiElement.remove();
     }
@@ -133,15 +202,7 @@ async function startEditEntry(id, uiElement) {
 
         entries.filter(x => x.id == id)[0].content = textArea.value;
 
-        await fetch("/upload", { 
-            headers: { 
-                "key": key,
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            }, 
-            body: JSON.stringify(entries), 
-            method: "post" 
-        });
+        uploadData(JSON.stringify(entries));
 
         var contentP = document.createElement("p");
         contentP.className = "content";
@@ -159,46 +220,26 @@ async function startEditEntry(id, uiElement) {
 
 }
 
-async function decrypt(key, encrypted) { 
-    
-    var encryptedBytes = Uint8Array.from(atob(encrypted), c => c.charCodeAt(0));
-  
-    const encoder = new TextEncoder();
-    const keyData = encoder.encode(key);
-    const hashBuffer = await crypto.subtle.digest("SHA-256", keyData);
-
-    const cryptoKey = await crypto.subtle.importKey(
-        "raw",
-        hashBuffer,
-        { name: "AES-CTR" },
-        false,
-        [ "decrypt" ]
-    );
-
-    const iv = encryptedBytes.slice(0, 16);
-    const ciphertext = encryptedBytes.slice(16);
-    
-    const decryptedBuffer = await crypto.subtle.decrypt(
-        { name: "AES-CTR", counter: iv, length: 64 },
-        cryptoKey,
-        ciphertext
-    );
-
-    return new TextDecoder().decode(decryptedBuffer);
-    
-}
-
-async function load(password) {
+async function load(password, asEditor, editorPassword) {
 
     var button = document.getElementById("enter-button");
 
     showLoader();
 
     try {
+        
+        if (asEditor) {
+            if (!await verifyEditor(editorPassword)) {
+                throw new Error("wrong editor password");
+            } else {
+                editorKey = editorPassword;
+                EDITOR = true;
+            }
+        }
 
-        var data = await (await fetch(EDITOR ? "/data" : "https://gist.githubusercontent.com/davidsaltacc/819dd14b5ce6510b950b0ff7fbfa2119/raw/private-entries.bin", { 
+        var data = JSON.parse(await (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", { 
             cache: "no-store" 
-        })).text();
+        })).text()).files["private-entries.bin"].content;
 
         data = JSON.parse(await decrypt(password, data));
         
@@ -253,16 +294,12 @@ function showPasswordChangeDialogue() {
 
 async function changePassword(oldPass, newPass) {
     showLoader();
-    if ((await fetch("/change_password", { 
-        headers: { 
-            "old_pass": oldPass,
-            "new_pass": newPass
-        },
-        method: "post"
-    })).status == 200) {
-        document.getElementById("change-pass-dialogue").classList.remove("hidden");;
-        key = newPass;
+    var old = key;
+    key = newPass;
+    if (oldPass == old && await uploadData(JSON.stringify(entries)) == 200) {
+        document.getElementById("change-pass-dialogue").classList.add("hidden");
     } else {
+        key = old;
         document.getElementById("change-pass-confirm").innerHTML = "[failed...]";
         setTimeout(() => {
             document.getElementById("change-pass-confirm").innerHTML = "Change";
