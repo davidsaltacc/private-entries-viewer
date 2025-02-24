@@ -43,7 +43,7 @@ body {
 .password-dialogue {
     background-color: #242424;
     width: 350px;
-    height: 200px;
+    height: 230px;
     border-radius: 35px;
     display: flex;
     flex-direction: column;
@@ -52,7 +52,7 @@ body {
 }
 
 .change-pass-dialogue {
-    height: 250px;
+    height: 280px !important;
 }
 
 .password-dialogue input:not([type="checkbox"]), button {
@@ -161,19 +161,19 @@ body:has(input#is-editor[type="checkbox"]:checked) .editor-pass {
 }
 
 body:has(input#is-editor[type="checkbox"]:checked) .password-dialogue {
-    height: 280px;
+    height: 310px;
 }
 
-#iseditor-boxandlabel {
+#iseditor-boxandlabel, .showpass-boxandlabel {
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-#is-editor {
+#is-editor, .show-pass {
     -webkit-appearance: none;
     appearance: none;
-    margin: 10px;
+    margin: 5px;
     width: 18px;
     height: 18px;
     color: #333333;
@@ -183,6 +183,6 @@ body:has(input#is-editor[type="checkbox"]:checked) .password-dialogue {
     border: 1px solid #4e4e4e;
 }
 
-#is-editor:checked {
+#is-editor:checked, .show-pass:checked {
     background-color: #9b9b9b;
 }
