@@ -2,7 +2,7 @@
 var EDITOR = false; 
 
 if (!crypto.subtle) {
-    [ x => { throw new Error(x) }, alert ].forEach(f => f("Can't encrypt diary entries. Please visit the https version of this website, incase you are on the http version, else switch to a modern browser that supports WebCrypto (baseline 2015)."));
+    [ alert, x => { throw new Error(x) } ].forEach(f => f("Can't encrypt diary entries. Please visit the https version of this website, incase you are on the http version, else switch to a modern browser that supports WebCrypto (baseline 2015)."));
 }
 
 const encrypted_write_key = "Û\u009e\u0088o\u00815%\u0006)A\u0018òÏ§Ô·áHè\u0089¡x0e\u000e\u009b\u001fGñ´jø\u0019Þ4CHD1ÅÆ»û&hÖ¯:I¦?JEê¦b";
