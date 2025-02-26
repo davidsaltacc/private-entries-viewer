@@ -257,6 +257,8 @@ async function load(password, asEditor, editorPassword) {
                 Cookies.set("editorkey", btoa(editorKey), { expires: 1 });
             }
 
+        } else {
+            Cookies.set("iseditor", false, { expires: 1 });
         }
 
         var data = JSON.parse(await (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", { 
