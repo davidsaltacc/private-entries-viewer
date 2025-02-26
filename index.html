@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>David's Private Diary Entries</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script><!-- cba to bother with cookies -->
     <script src="main.js" defer></script>
     <link rel="stylesheet" href="styles.css"></link>
 </head>
@@ -44,6 +45,10 @@
             <button type="button" title="Add Entry" class="add-entry-button" onclick="showEditing();" id="new-entry-button">Add New Entry</button>
             <button type="button" title="Change Password" class="add-entry-button" onclick="showPasswordChangeDialogue();" id="change-pass-button">Change Password</button>
             <button type="button" title="Change Editor Password" class="add-entry-button" onclick="showEditorPasswordChangeDialogue();" id="change-editor-pass-button">Change Editor Password</button>
+            <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-again-button">Log in again</button>
+        </div>
+        <div id="non-editor-options" style="display: none;">
+            <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-editor-button">Log in as editor</button>
         </div>
     </div>
     <div class="entry hidden" id="editing-entry">

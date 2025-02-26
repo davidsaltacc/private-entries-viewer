@@ -7,6 +7,8 @@ if (!crypto.subtle) {
 
 var encryptedWriteKey = null;
 
+new Array(document.getElementsByTagName("input")).filter(i => i.type == "checkbox").forEach(i => i.removeAttribute("checked"));
+
 function hideLoader() {
     document.getElementById("loader").classList.add("hidden");
 }
@@ -251,6 +253,8 @@ async function load(password, asEditor, editorPassword) {
             } else {
                 editorKey = editorPassword;
                 EDITOR = true;
+                Cookies.set("iseditor", true, { expires: 1 });
+                Cookies.set("editorkey", btoa(editorKey), { expires: 1 });
             }
 
         }
@@ -274,6 +278,8 @@ async function load(password, asEditor, editorPassword) {
 
         entries = data;
         key = password;
+        
+        Cookies.set("key", btoa(key), { expires: 1 });
 
     } catch (err) { 
         hideLoader();
@@ -290,9 +296,18 @@ async function load(password, asEditor, editorPassword) {
     document.getElementById("pass-popup").style.display = "none";
     if (EDITOR) {
         document.getElementById("options").style.display = "block";
+    } else {
+        document.getElementById("non-editor-options").style.display = "block";
     }
     hideLoader();
 
+}
+
+function showLoginScreen() {
+    document.getElementById("entries").innerHTML = "";
+    document.getElementById("pass-popup").style.display = "";
+    document.getElementById("options").style.display = "none";
+    document.getElementById("non-editor-options").style.display = "none";
 }
 
 function showEditing() {
@@ -346,4 +361,8 @@ async function changeEditorPassword(oldPass, newPass) {
         }, 1000);
     }
     hideLoader();
+}
+
+if (Cookies.get("key")) {
+    load(atob(Cookies.get("key")), Cookies.get("iseditor"), atob(Cookies.get("editorkey") ?? ""));
 }
