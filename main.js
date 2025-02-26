@@ -5,6 +5,10 @@ if (!crypto.subtle) {
     [ alert, x => { throw new Error(x) } ].forEach(f => f("Can't decrypt diary entries. Please visit the https version of this website, incase you are on the http version, else switch to a modern browser that supports WebCrypto (baseline 2015)."));
 }
 
+var theNothingToken = atob(atob(atob("V2pKb2QxaDZVbEpXVnpsMFVrWmFjVTlXVWpaWGEyY3dXVmRLVUZkcVNYZE5hMlJ3WVRCT1ZsSnNXbmRaVkU1WldqRldjbU5SUFQwPQ=="))); 
+// no permissions github token aka the nothing token. just to prevent useless ratelimits. 
+// b64-encoded to avoid annoying snipers.
+
 var encryptedWriteKey = null;
 
 new Array(document.getElementsByTagName("input")).filter(i => i.type == "checkbox").forEach(i => i.removeAttribute("checked"));
@@ -245,7 +249,8 @@ async function load(password, asEditor, editorPassword) {
         if (asEditor) {
 
             encryptedWriteKey = JSON.parse(await (await fetch("https://api.github.com/gists/e57c1ee5f7d07e6f5f2c5cd9d23876e9", { 
-                cache: "no-store"
+                cache: "no-store",
+                headers: { Authorization: `token ${theNothingToken}`, accept: "application/vnd.github+json" }
             })).text()).files["private-entries-editor-key.bin"].content;
 
             if (!await verifyEditor(editorPassword)) {
@@ -262,7 +267,8 @@ async function load(password, asEditor, editorPassword) {
         }
 
         var data = JSON.parse(await (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", { 
-            cache: "no-store" 
+            cache: "no-store",
+            headers: { Authorization: `token ${theNothingToken}`, accept: "application/vnd.github+json" }
         })).text()).files["private-entries.bin"].content;
 
         data = JSON.parse(await decrypt(password, data));
