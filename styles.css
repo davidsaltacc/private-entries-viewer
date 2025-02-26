@@ -109,7 +109,9 @@ body {
 .add-entry-button {
     background-color: #2b2b2b;
     font-size: medium;
-    width: 150px;
+    width: max-content;
+    padding-left: 12px;
+    padding-right: 12px;
 }
 
 textarea {

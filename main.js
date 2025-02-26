@@ -2,10 +2,10 @@
 var EDITOR = false; 
 
 if (!crypto.subtle) {
-    [ alert, x => { throw new Error(x) } ].forEach(f => f("Can't encrypt diary entries. Please visit the https version of this website, incase you are on the http version, else switch to a modern browser that supports WebCrypto (baseline 2015)."));
+    [ alert, x => { throw new Error(x) } ].forEach(f => f("Can't decrypt diary entries. Please visit the https version of this website, incase you are on the http version, else switch to a modern browser that supports WebCrypto (baseline 2015)."));
 }
 
-const encrypted_write_key = "Û\u009e\u0088o\u00815%\u0006)A\u0018òÏ§Ô·áHè\u0089¡x0e\u000e\u009b\u001fGñ´jø\u0019Þ4CHD1ÅÆ»û&hÖ¯:I¦?JEê¦b";
+var encryptedWriteKey = null;
 
 function hideLoader() {
     document.getElementById("loader").classList.add("hidden");
@@ -89,7 +89,7 @@ async function decrypt(key, encrypted) {
 async function verifyEditor(pass) {
     return (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", {
         method: "GET",
-        headers: { Authorization: `token ${await decrypt(pass, encrypted_write_key)}`, accept: "application/vnd.github+json" }
+        headers: { Authorization: `token ${await decrypt(pass, encryptedWriteKey)}`, accept: "application/vnd.github+json" }
     })).status == 200;
 }
 
@@ -136,12 +136,20 @@ var editorKey = null;
 
 var newEntryDate = null;
 
-async function uploadData(data) {
-    return (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", {
+async function _uploadData(data, gistId, encryptedKey, fileName) {
+    return (await fetch(`https://api.github.com/gists/${gistId}`, {
         method: "PATCH",
-        headers: { Authorization: `token ${await decrypt(editorKey, encrypted_write_key)}`, accept: "application/vnd.github+json" },
-        body: JSON.stringify({ files: { "private-entries.bin": { content: await encrypt(key, data) } } })
+        headers: { Authorization: `token ${await decrypt(editorKey, encryptedKey)}`, accept: "application/vnd.github+json" },
+        body: JSON.stringify({ files: { [ fileName ]: { content: data } } })
     })).status;
+}
+
+async function uploadData(data) {
+    return await _uploadData(await encrypt(key, data), "819dd14b5ce6510b950b0ff7fbfa2119", encryptedWriteKey, "private-entries.bin");
+}
+
+async function uploadChangedEditorKey(data) {
+    return await _uploadData(await encrypt(editorKey, data), "e57c1ee5f7d07e6f5f2c5cd9d23876e9", encryptedWriteKey, "private-entries-editor-key.bin");
 }
 
 async function uploadNewEntry(content, date) {
@@ -233,12 +241,18 @@ async function load(password, asEditor, editorPassword) {
     try {
         
         if (asEditor) {
+
+            encryptedWriteKey = JSON.parse(await (await fetch("https://api.github.com/gists/e57c1ee5f7d07e6f5f2c5cd9d23876e9", { 
+                cache: "no-store"
+            })).text()).files["private-entries-editor-key.bin"].content;
+
             if (!await verifyEditor(editorPassword)) {
                 throw new Error("wrong editor password");
             } else {
                 editorKey = editorPassword;
                 EDITOR = true;
             }
+
         }
 
         var data = JSON.parse(await (await fetch("https://api.github.com/gists/819dd14b5ce6510b950b0ff7fbfa2119", { 
@@ -296,6 +310,10 @@ function showPasswordChangeDialogue() {
     document.getElementById("change-pass-dialogue").classList.toggle("hidden");
 }
 
+function showEditorPasswordChangeDialogue() {
+    document.getElementById("change-editor-pass-dialogue").classList.toggle("hidden");
+}
+
 async function changePassword(oldPass, newPass) {
     showLoader();
     var old = key;
@@ -307,6 +325,24 @@ async function changePassword(oldPass, newPass) {
         document.getElementById("change-pass-confirm").innerHTML = "[failed...]";
         setTimeout(() => {
             document.getElementById("change-pass-confirm").innerHTML = "Change";
+        }, 1000);
+    }
+    hideLoader();
+}
+
+async function changeEditorPassword(oldPass, newPass) {
+    showLoader();
+    var old = editorKey;
+    editorKey = newPass;
+    var dec = await decrypt(oldPass, encryptedWriteKey);
+    encryptedWriteKey = await encrypt(editorKey, dec);
+    if (oldPass == old && (await uploadChangedEditorKey(dec)) == 200) {
+        document.getElementById("change-editor-pass-dialogue").classList.add("hidden");
+    } else {
+        editorKey = old;
+        document.getElementById("change-editor-pass-confirm").innerHTML = "[failed...]";
+        setTimeout(() => {
+            document.getElementById("change-editor-pass-confirm").innerHTML = "Change";
         }, 1000);
     }
     hideLoader();
