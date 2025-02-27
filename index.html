@@ -19,7 +19,7 @@
             <p id="iseditor-boxandlabel"><input type="checkbox" title="are you an editor?" id="is-editor"> I am an editor</p>
             <h2 class="editor-pass" style="display: none;">Editor's Password</h2>
             <input title="password" class="editor-pass" id="editor-pass" type="password" style="display: none;" name="password2">
-            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" onclick="document.getElementById('pass').type = document.getElementById('editor-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
+            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" oninput="document.getElementById('pass').type = document.getElementById('editor-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
             <button title="submit" type="button" onclick="load(document.getElementById('pass').value.trim(), document.getElementById('is-editor').checked, document.getElementById('editor-pass').value.trim());" id="enter-button">Enter</button>
         </div>
         <div class="password-dialogue change-pass-dialogue hidden" id="change-pass-dialogue">
@@ -27,7 +27,7 @@
             <input title="old password" id="old-pass" type="password">
             <h3>New password</h3>
             <input title="new password" id="new-pass" type="password">
-            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" onclick="document.getElementById('old-pass').type = document.getElementById('new-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
+            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" oninput="document.getElementById('old-pass').type = document.getElementById('new-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
             <button title="submit" type="button" onclick="changePassword(document.getElementById('old-pass').value.trim(), document.getElementById('new-pass').value.trim());" id="change-pass-confirm">Change</button>
         </div>
         <div class="password-dialogue change-pass-dialogue hidden" id="change-editor-pass-dialogue">
@@ -35,25 +35,29 @@
             <input title="old password" id="old-editor-pass" type="password">
             <h3>New Editor password</h3>
             <input title="new password" id="new-editor-pass" type="password">
-            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" onclick="document.getElementById('old-editor-pass').type = document.getElementById('new-editor-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
+            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" oninput="document.getElementById('old-editor-pass').type = document.getElementById('new-editor-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
             <button title="submit" type="button" onclick="changeEditorPassword(document.getElementById('old-editor-pass').value.trim(), document.getElementById('new-editor-pass').value.trim());" id="change-editor-pass-confirm">Change</button>
         </div>
     </div>
     <div class="header">
         <h2>Diary Entries</h2>
         <div id="options" style="display: none;">
-            <button type="button" title="Add Entry" class="add-entry-button" onclick="showEditing();" id="new-entry-button">Add New Entry</button>
-            <button type="button" title="Change Password" class="add-entry-button" onclick="showPasswordChangeDialogue();" id="change-pass-button">Change Password</button>
-            <button type="button" title="Change Editor Password" class="add-entry-button" onclick="showEditorPasswordChangeDialogue();" id="change-editor-pass-button">Change Editor Password</button>
-            <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-again-button">Log in again</button>
+            <button type="button" title="options" class="toggle-options-button" onclick="document.getElementById('editor-options-container').classList.toggle('hidden');">Options</button>
+            <div class="hidden" id="editor-options-container">
+                <button type="button" title="Add Entry" class="add-entry-button" onclick="showEditing();" id="new-entry-button">Add New Entry</button>
+                <button type="button" title="Change Password" class="add-entry-button" onclick="showPasswordChangeDialogue();" id="change-pass-button">Change Password</button>
+                <button type="button" title="Change Editor Password" class="add-entry-button" onclick="showEditorPasswordChangeDialogue();" id="change-editor-pass-button">Change Editor Password</button>
+                <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-again-button">Log in again</button>
+            </div>
         </div>
         <div id="non-editor-options" style="display: none;">
-            <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-editor-button">Log in as editor</button>
+            <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-editor-button">Log in again</button>
         </div>
     </div>
     <div class="entry hidden" id="editing-entry">
         <p class="date" id="editing-date">Now</p>
         <textarea title="Content" id="editing-content" oninput="this.style.height = '1px'; this.style.height = `${this.scrollHeight}px`" rows="1"></textarea>
+        <p class="sse-selection-label"><input type="checkbox" title="super secret entry?" id="issse"> Is Super Secret Entry<span id="sse-create-pass" style="display: none;">, password: <input type="text" title="super secret entry password" id="ssep"></span></p>
         <button title="Save" type="button" id="editing-save-button" class="editing-save-button" onclick="saveEntry();">Save</button>
     </div>
     <div id="entries"></div>

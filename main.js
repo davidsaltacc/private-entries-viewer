@@ -1,5 +1,5 @@
 
-var EDITOR = false; 
+var isEditor = false; 
 
 if (!crypto.subtle) {
     [ alert, x => { throw new Error(x) } ].forEach(f => f("Can't decrypt diary entries. Please visit the https version of this website, incase you are on the http version, else switch to a modern browser that supports WebCrypto (baseline 2015)."));
@@ -8,6 +8,8 @@ if (!crypto.subtle) {
 var theNothingToken = atob(atob(atob("V2pKb2QxaDZVbEpXVnpsMFVrWmFjVTlXVWpaWGEyY3dXVmRLVUZkcVNYZE5hMlJ3WVRCT1ZsSnNXbmRaVkU1WldqRldjbU5SUFQwPQ=="))); 
 // no permissions github token aka the nothing token. just to prevent useless ratelimits. 
 // b64-encoded to avoid annoying snipers.
+
+const DISABLE_LOADING_ENTRIES = false; // development
 
 var encryptedWriteKey = null;
 
@@ -118,7 +120,7 @@ function createEntryInUI(content, date, id, prepend) {
     editSpan.innerHTML = "[Edit] ";
     removeSpan.innerHTML = "[Remove] ";
 
-    if (EDITOR) {
+    if (isEditor) {
         dateP.appendChild(editSpan);
         dateP.appendChild(removeSpan);
     }
@@ -245,6 +247,20 @@ async function load(password, asEditor, editorPassword) {
     showLoader();
 
     try {
+
+        if (DISABLE_LOADING_ENTRIES) {
+
+            document.getElementById("pass-popup").style.display = "none";
+            if (asEditor) {
+                document.getElementById("options").style.display = "block";
+            } else {
+                document.getElementById("non-editor-options").style.display = "block";
+            }
+            hideLoader();
+
+            return;
+            
+        }
         
         if (asEditor) {
 
@@ -257,7 +273,7 @@ async function load(password, asEditor, editorPassword) {
                 throw new Error("wrong editor password");
             } else {
                 editorKey = editorPassword;
-                EDITOR = true;
+                isEditor = true;
                 Cookies.set("iseditor", true, { expires: 1 });
                 Cookies.set("editorkey", btoa(editorKey), { expires: 1 });
             }
@@ -302,7 +318,7 @@ async function load(password, asEditor, editorPassword) {
     }
 
     document.getElementById("pass-popup").style.display = "none";
-    if (EDITOR) {
+    if (isEditor) {
         document.getElementById("options").style.display = "block";
     } else {
         document.getElementById("non-editor-options").style.display = "block";
