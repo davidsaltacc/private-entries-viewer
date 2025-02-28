@@ -12,10 +12,12 @@ var theNothingToken = atob(atob(atob("V2pKb2QxaDZVbEpXVnpsMFVrWmFjVTlXVWpaWGEyY3
 // b64-encoded to avoid annoying snipers.
 
 const DISABLE_LOADING_ENTRIES = false; // development
+// TODO undo
 
 var encryptedWriteKey = null;
 
 new Array(document.getElementsByTagName("input")).filter(i => i.type == "checkbox").forEach(i => i.removeAttribute("checked"));
+new Array(document.getElementsByTagName("input")).filter(i => i.type == "text" || i.type == "password").forEach(i => i.value = "");
 
 function hideLoader() {
     eId("loader").classList.add("hidden");
@@ -239,7 +241,6 @@ async function uploadNewEntry(content, date) {
             hideLoader();
             return "Wrong Super Secret Entry password";
         }
-        // TODO make sse pwd changeable (1. validate if old pass works, 2. update, so re-encrypt, all sse's, 3. update the gist with the sse pwd verification)
         content = await encrypt(eId("ssep").value, JSON.stringify({ content }));
     }
     entries.unshift({
@@ -295,7 +296,7 @@ async function startEditEntry(id, uiElement, sse, ssep) {
 
         showLoader();
 
-        entries.filter(x => x.id == id)[0].content = await encrypt(ssep, JSON.stringify({ content: textArea.value }));
+        entries.filter(x => x.id == id)[0].content = sse ? await encrypt(ssep, JSON.stringify({ content: textArea.value })) : textArea.value;
 
         await uploadData(JSON.stringify(entries));
 
@@ -433,6 +434,10 @@ function showEditorPasswordChangeDialogue() {
     eId("change-editor-pass-dialogue").classList.toggle("hidden");
 }
 
+function showSSEPasswordChangeDialogue() {
+    eId("change-sse-pass-dialogue").classList.toggle("hidden");
+}
+
 async function changePassword(oldPass, newPass) {
     showLoader();
     var old = key;
@@ -462,6 +467,33 @@ async function changeEditorPassword(oldPass, newPass) {
         eId("change-editor-pass-confirm").innerHTML = "[failed...]";
         setTimeout(() => {
             eId("change-editor-pass-confirm").innerHTML = "Change";
+        }, 1000);
+    }
+    hideLoader();
+}
+
+async function changeSSEPassword(oldPass, newPass) {
+    showLoader();
+    try {
+        if (!await validateSSEPass(oldPass)) {
+            throw new Error("wrong old sse password");
+        }
+
+        for (var entry of entries) {
+            if (entry.sse) {
+                entry.content = await encrypt(newPass, await decrypt(oldPass, entry.content));
+            }
+        }
+
+        await uploadData(JSON.stringify(entries));
+        await _uploadData(await encrypt(newPass, "{}"), "e57c1ee5f7d07e6f5f2c5cd9d23876e9", encryptedWriteKey, "private-entries-sse-encrypted.bin");
+        eId("change-sse-pass-dialogue").classList.add("hidden");
+
+    } catch (err) {
+        console.error(err);
+        eId("change-sse-pass-confirm").innerHTML = "[failed...]";
+        setTimeout(() => {
+            eId("change-sse-pass-confirm").innerHTML = "Change";
         }, 1000);
     }
     hideLoader();

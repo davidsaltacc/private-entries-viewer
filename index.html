@@ -39,6 +39,14 @@
             <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" oninput="document.getElementById('old-editor-pass').type = document.getElementById('new-editor-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
             <button title="submit" type="button" onclick="changeEditorPassword(document.getElementById('old-editor-pass').value.trim(), document.getElementById('new-editor-pass').value.trim());" id="change-editor-pass-confirm">Change</button>
         </div>
+        <div class="password-dialogue change-pass-dialogue hidden" id="change-sse-pass-dialogue">
+            <h3>Old SSE password</h3>
+            <input title="old password" id="old-sse-pass" type="password">
+            <h3>New SSE password</h3>
+            <input title="new password" id="new-sse-pass" type="password">
+            <p class="showpass-boxandlabel"><input type="checkbox" title="show password?" class="show-pass" oninput="document.getElementById('old-sse-pass').type = document.getElementById('new-sse-pass').type = this.checked ? 'text' : 'password';"> Show password</p>
+            <button title="submit" type="button" onclick="changeSSEPassword(document.getElementById('old-sse-pass').value.trim(), document.getElementById('new-sse-pass').value.trim());" id="change-sse-pass-confirm">Change</button>
+        </div>
     </div>
     <div class="header">
         <h2>Diary Entries</h2>
@@ -48,6 +56,7 @@
                 <button type="button" title="Add Entry" class="add-entry-button" onclick="showEditing();" id="new-entry-button">Add New Entry</button>
                 <button type="button" title="Change Password" class="add-entry-button" onclick="showPasswordChangeDialogue();" id="change-pass-button">Change Password</button>
                 <button type="button" title="Change Editor Password" class="add-entry-button" onclick="showEditorPasswordChangeDialogue();" id="change-editor-pass-button">Change Editor Password</button>
+                <button type="button" title="Change SSE Password" class="add-entry-button" onclick="showSSEPasswordChangeDialogue();" id="change-sse-pass-button">Change SSE Password</button>
                 <button type="button" title="Log In Again" class="add-entry-button" onclick="showLoginScreen();" id="login-again-button">Log in again</button>
             </div>
         </div>
