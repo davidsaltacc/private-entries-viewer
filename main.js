@@ -119,7 +119,7 @@ function createEntryInUI(content, date, id, prepend, sse) {
     editSpan.className = "entry-action";
     removeSpan.className = "entry-action";
 
-    dateP.innerHTML = `${date} `;
+    dateP.innerHTML = `${sse ? "[Extra Encrypted] " : ""}${date} `;
     editSpan.innerHTML = "[Edit] ";
     removeSpan.innerHTML = "[Remove] ";
 
