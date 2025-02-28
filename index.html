@@ -7,6 +7,7 @@
     <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script><!-- cba to bother with cookies -->
     <script src="main.js" defer></script>
     <link rel="stylesheet" href="styles.css"></link>
+    <link rel="icon" href="favicon.svg" sizes="any" type="image/svg+xml">
 </head>
 <body>
     <div class="loader-container hidden" id="loader">
@@ -57,7 +58,7 @@
     <div class="entry hidden" id="editing-entry">
         <p class="date" id="editing-date">Now</p>
         <textarea title="Content" id="editing-content" oninput="this.style.height = '1px'; this.style.height = `${this.scrollHeight}px`" rows="1"></textarea>
-        <p class="sse-selection-label"><input type="checkbox" title="super secret entry?" id="issse"> Is Super Secret Entry<span id="sse-create-pass" style="display: none;">, password: <input type="text" title="super secret entry password" id="ssep"></span></p>
+        <p class="sse-selection-label"><input type="checkbox" title="super secret entry?" id="issse"> Is Super Secret Entry<span id="sse-create-pass" style="display: none;">, password: <input type="text" title="super secret entry password" id="ssep"></span><span class="upload-error" id="upload-error"></></p>
         <button title="Save" type="button" id="editing-save-button" class="editing-save-button" onclick="saveEntry();">Save</button>
     </div>
     <div id="entries"></div>

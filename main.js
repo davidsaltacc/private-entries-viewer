@@ -1,4 +1,6 @@
 
+const eId = i => document.getElementById(i);
+
 var isEditor = false; 
 
 if (!crypto.subtle) {
@@ -16,11 +18,11 @@ var encryptedWriteKey = null;
 new Array(document.getElementsByTagName("input")).filter(i => i.type == "checkbox").forEach(i => i.removeAttribute("checked"));
 
 function hideLoader() {
-    document.getElementById("loader").classList.add("hidden");
+    eId("loader").classList.add("hidden");
 }
 
 function showLoader() {
-    document.getElementById("loader").classList.remove("hidden");
+    eId("loader").classList.remove("hidden");
 }
 
 async function encrypt(key, input) {
@@ -101,7 +103,7 @@ async function verifyEditor(pass) {
     })).status == 200;
 }
 
-function createEntryInUI(content, date, id, prepend) {
+function createEntryInUI(content, date, id, prepend, sse) {
 
     var div = document.createElement("div");
     var dateP = document.createElement("p");
@@ -116,25 +118,75 @@ function createEntryInUI(content, date, id, prepend) {
     removeSpan.className = "entry-action";
 
     dateP.innerHTML = `${date} `;
-    contentP.innerHTML = content.replaceAll("\n", "<br>");
     editSpan.innerHTML = "[Edit] ";
     removeSpan.innerHTML = "[Remove] ";
 
-    if (isEditor) {
-        dateP.appendChild(editSpan);
-        dateP.appendChild(removeSpan);
+    if (!sse) {
+        
+        contentP.innerHTML = content.replaceAll("\n", "<br>");
+
+        if (isEditor) {
+            dateP.appendChild(editSpan);
+            dateP.appendChild(removeSpan);
+        }
+        div.appendChild(dateP);
+        div.appendChild(contentP);
+        eId("entries")[prepend ? "prepend" : "appendChild"](div);
+    
+        removeSpan.onclick = () => {
+            removeEntry(id, div);
+        };
+    
+        editSpan.onclick = () => {
+            startEditEntry(id, div);
+        };
+
+    } else {
+
+        contentP.innerHTML = `<span style="color: crimson;">[ ENTRY REQUIRES EXTRA PASSWORD ]</span><br>`;
+
+        var passInput = document.createElement("input");
+        passInput.type = "password";
+
+        var passSubmit = document.createElement("button");
+        passSubmit.innerHTML = "Decrypt";
+
+        contentP.appendChild(passInput);
+        contentP.appendChild(passSubmit);
+
+        if (isEditor) {
+            dateP.appendChild(removeSpan);
+        }
+        div.appendChild(dateP);
+        div.appendChild(contentP);
+        eId("entries")[prepend ? "prepend" : "appendChild"](div);
+
+        removeSpan.onclick = () => {
+            removeEntry(id, div);
+        };
+
+        passSubmit.onclick = async () => {
+            try {
+                var dec = JSON.parse(await decrypt(passInput.value, content)).content.replaceAll("\n", "<br>");
+                contentP.setAttribute("decrypted", true);
+                contentP.innerHTML = dec;
+                if (isEditor) {
+                    dateP.insertBefore(editSpan, removeSpan);
+                }
+    
+                editSpan.onclick = () => {
+                    startEditEntry(id, div, true, passInput.value);
+                };
+            } catch (err) {
+                console.error(err);
+                passSubmit.innerHTML = "[failed...]";
+                setTimeout(() => {
+                    passSubmit.innerHTML = "Decrypt";
+                }, 1000);
+            }
+        };
+
     }
-    div.appendChild(dateP);
-    div.appendChild(contentP);
-    document.getElementById("entries")[prepend ? "prepend" : "appendChild"](div);
-
-    removeSpan.onclick = () => {
-        removeEntry(id, div);
-    };
-
-    editSpan.onclick = () => {
-        startEditEntry(id, div);
-    };
 
 } 
 
@@ -160,20 +212,43 @@ async function uploadChangedEditorKey(data) {
     return await _uploadData(await encrypt(editorKey, data), "e57c1ee5f7d07e6f5f2c5cd9d23876e9", encryptedWriteKey, "private-entries-editor-key.bin");
 }
 
+async function validateSSEPass(pass) {
+    try {
+        JSON.parse(await decrypt(pass, JSON.parse(await (await fetch("https://api.github.com/gists/e57c1ee5f7d07e6f5f2c5cd9d23876e9", {
+            method: "GET",
+            headers: { Authorization: `token ${theNothingToken}`, accept: "application/vnd.github+json" }
+        })).text()).files["private-entries-sse-encrypted.bin"].content));
+        return true;
+    } catch (err) {
+        console.error(err);
+        return false;
+    }
+}
+
 async function uploadNewEntry(content, date) {
     showLoader();
     var id = 0;
     var usedIds = new Set(entries.map(item => item.id));
+    var isSSE = eId("issse").checked;
     while (usedIds.has(id)) {
         id++;
     }
     content = content.trim();
+    if (isSSE) {
+        if (!await validateSSEPass(eId("ssep").value)) {
+            hideLoader();
+            return "Wrong Super Secret Entry password";
+        }
+        // TODO make sse pwd changeable (1. validate if old pass works, 2. update, so re-encrypt, all sse's, 3. update the gist with the sse pwd verification)
+        content = await encrypt(eId("ssep").value, JSON.stringify({ content }));
+    }
     entries.unshift({
         date: date.toISOString(),
         content: content,
-        id: id
+        id: id,
+        sse: isSSE
     });
-    uploadData(JSON.stringify(entries));
+    await uploadData(JSON.stringify(entries));
     createEntryInUI(content, date.toLocaleString("en-US", {
         timeZone: "Europe/Berlin",
         year: "numeric",
@@ -183,21 +258,21 @@ async function uploadNewEntry(content, date) {
         minute: "2-digit",
         second: "2-digit",
         hour12: false
-    }), id, true);
+    }), id, true, isSSE);
     hideLoader();
 }
 
 async function removeEntry(id, uiElement) {
     showLoader();
     entries.splice(entries.indexOf(entries.filter(x => x.id == id)[0]), 1);
-    uploadData(JSON.stringify(entries));
+    await uploadData(JSON.stringify(entries));
     if (uiElement) {
         uiElement.remove();
     }
     hideLoader();
 }
 
-async function startEditEntry(id, uiElement) {
+async function startEditEntry(id, uiElement, sse, ssep) {
 
     var textArea = document.createElement("textarea");
     textArea.oninput = () => {
@@ -205,7 +280,7 @@ async function startEditEntry(id, uiElement) {
         textArea.style.height = `${textArea.scrollHeight}px`;
     };
     textArea.title = "Content";
-    textArea.value = entries.filter(x => x.id == id)[0].content;
+    textArea.value = sse ? JSON.parse(await decrypt(ssep, entries.filter(x => x.id == id)[0].content)).content : entries.filter(x => x.id == id)[0].content;
     textArea.rows = textArea.value.split("\n").length + 1;
 
     uiElement.getElementsByClassName("content")[0].remove();
@@ -220,9 +295,9 @@ async function startEditEntry(id, uiElement) {
 
         showLoader();
 
-        entries.filter(x => x.id == id)[0].content = textArea.value;
+        entries.filter(x => x.id == id)[0].content = await encrypt(ssep, JSON.stringify({ content: textArea.value }));
 
-        uploadData(JSON.stringify(entries));
+        await uploadData(JSON.stringify(entries));
 
         var contentP = document.createElement("p");
         contentP.className = "content";
@@ -242,7 +317,7 @@ async function startEditEntry(id, uiElement) {
 
 async function load(password, asEditor, editorPassword) {
 
-    var button = document.getElementById("enter-button");
+    var button = eId("enter-button");
 
     showLoader();
 
@@ -250,11 +325,11 @@ async function load(password, asEditor, editorPassword) {
 
         if (DISABLE_LOADING_ENTRIES) {
 
-            document.getElementById("pass-popup").style.display = "none";
+            eId("pass-popup").style.display = "none";
             if (asEditor) {
-                document.getElementById("options").style.display = "block";
+                eId("options").style.display = "block";
             } else {
-                document.getElementById("non-editor-options").style.display = "block";
+                eId("non-editor-options").style.display = "block";
             }
             hideLoader();
 
@@ -298,7 +373,7 @@ async function load(password, asEditor, editorPassword) {
             minute: "2-digit",
             second: "2-digit",
             hour12: false
-        }), entry.id));
+        }), entry.id, false, entry.sse));
 
         entries = data;
         key = password;
@@ -317,40 +392,45 @@ async function load(password, asEditor, editorPassword) {
         return; 
     }
 
-    document.getElementById("pass-popup").style.display = "none";
+    eId("pass-popup").style.display = "none";
     if (isEditor) {
-        document.getElementById("options").style.display = "block";
+        eId("options").style.display = "block";
     } else {
-        document.getElementById("non-editor-options").style.display = "block";
+        eId("non-editor-options").style.display = "block";
     }
     hideLoader();
 
 }
 
 function showLoginScreen() {
-    document.getElementById("entries").innerHTML = "";
-    document.getElementById("pass-popup").style.display = "";
-    document.getElementById("options").style.display = "none";
-    document.getElementById("non-editor-options").style.display = "none";
+    eId("entries").innerHTML = "";
+    eId("pass-popup").style.display = "";
+    eId("options").style.display = "none";
+    eId("non-editor-options").style.display = "none";
 }
 
 function showEditing() {
-    document.getElementById("editing-entry").classList.toggle("hidden");
+    eId("editing-entry").classList.toggle("hidden");
     newEntryDate = new Date(Date.now());
 }
 
-function saveEntry() {
-    uploadNewEntry(document.getElementById("editing-content").value, newEntryDate);
-    document.getElementById("editing-content").value = "";
-    document.getElementById("editing-entry").classList.add("hidden");
+async function saveEntry() {
+    var res = await uploadNewEntry(eId("editing-content").value, newEntryDate);
+    if (!res) {
+        eId("editing-content").value = "";
+        eId("editing-entry").classList.add("hidden");
+        eId("upload-error").innerHTML = "";
+    } else {
+        eId("upload-error").innerHTML = res;
+    }
 }
 
 function showPasswordChangeDialogue() {
-    document.getElementById("change-pass-dialogue").classList.toggle("hidden");
+    eId("change-pass-dialogue").classList.toggle("hidden");
 }
 
 function showEditorPasswordChangeDialogue() {
-    document.getElementById("change-editor-pass-dialogue").classList.toggle("hidden");
+    eId("change-editor-pass-dialogue").classList.toggle("hidden");
 }
 
 async function changePassword(oldPass, newPass) {
@@ -358,12 +438,12 @@ async function changePassword(oldPass, newPass) {
     var old = key;
     key = newPass;
     if (oldPass == old && await uploadData(JSON.stringify(entries)) == 200) {
-        document.getElementById("change-pass-dialogue").classList.add("hidden");
+        eId("change-pass-dialogue").classList.add("hidden");
     } else {
         key = old;
-        document.getElementById("change-pass-confirm").innerHTML = "[failed...]";
+        eId("change-pass-confirm").innerHTML = "[failed...]";
         setTimeout(() => {
-            document.getElementById("change-pass-confirm").innerHTML = "Change";
+            eId("change-pass-confirm").innerHTML = "Change";
         }, 1000);
     }
     hideLoader();
@@ -376,12 +456,12 @@ async function changeEditorPassword(oldPass, newPass) {
     var dec = await decrypt(oldPass, encryptedWriteKey);
     encryptedWriteKey = await encrypt(editorKey, dec);
     if (oldPass == old && (await uploadChangedEditorKey(dec)) == 200) {
-        document.getElementById("change-editor-pass-dialogue").classList.add("hidden");
+        eId("change-editor-pass-dialogue").classList.add("hidden");
     } else {
         editorKey = old;
-        document.getElementById("change-editor-pass-confirm").innerHTML = "[failed...]";
+        eId("change-editor-pass-confirm").innerHTML = "[failed...]";
         setTimeout(() => {
-            document.getElementById("change-editor-pass-confirm").innerHTML = "Change";
+            eId("change-editor-pass-confirm").innerHTML = "Change";
         }, 1000);
     }
     hideLoader();
